@@ -1,9 +1,9 @@
-import express from 'express';
-import * as dotenv from 'dotenv';
-import cors from 'cors';
-import { Configuration, OpenAIApi } from 'openai';
+import express from 'express'
+import * as dotenv from 'dotenv'
+import cors from 'cors'
+import { Configuration, OpenAIApi } from 'openai'
 
-dotenv.config();
+dotenv.config()
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
@@ -11,20 +11,20 @@ const configuration = new Configuration({
 
 const openai = new OpenAIApi(configuration);
 
-const app = express();
-app.use(cors());
-app.use(express.json());
+const app = express()
+app.use(cors())
+app.use(express.json())
 
 app.get('/', async (req, res) => {
   res.status(200).send({
-    message: 'Hello from CodeX!',
-  });
-});
+    message: 'Hello from CodeX!'
+  })
+})
 
-async function createCompletionWithRetry(prompt, retries = 3, backoff = 500) {
+async function createCompletionWithRetry(prompt, retries = 3, delay = 500) {
   try {
     const response = await openai.createCompletion({
-      model: 'text-davinci-003',
+      model: "text-davinci-003",
       prompt: `${prompt}`,
       temperature: 0,
       max_tokens: 3000,
@@ -34,14 +34,9 @@ async function createCompletionWithRetry(prompt, retries = 3, backoff = 500) {
     });
     return response;
   } catch (error) {
-    if (error.response && error.response.status === 429 && retries > 0) {
-      return new Promise((resolve, reject) => {
-        setTimeout(() => {
-          createCompletionWithRetry(prompt, retries - 1, backoff * 2)
-            .then(resolve)
-            .catch(reject);
-        }, backoff);
-      });
+    if (retries > 0 && error.status === 429) {
+      await new Promise((resolve) => setTimeout(resolve, delay));
+      return createCompletionWithRetry(prompt, retries - 1, delay * 2);
     } else {
       throw error;
     }
@@ -55,12 +50,13 @@ app.post('/', async (req, res) => {
     const response = await createCompletionWithRetry(prompt);
 
     res.status(200).send({
-      bot: response.data.choices[0].text,
+      bot: response.data.choices[0].text
     });
+
   } catch (error) {
-    console.error(error);
+    console.error(error)
     res.status(500).send(error || 'Something went wrong');
   }
-});
+})
 
-app.listen(5000, () => console.log('AI server started on http://localhost:5000'));
+app.listen(5000, () => console.log('AI server started on http://localhost:5000'))
