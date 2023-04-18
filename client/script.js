@@ -112,9 +112,9 @@ const handleSubmit = async (e) => {
     }
 }
 
-form.addEventListener('submit', handleSubmit)
-form.addEventListener('keyup', (e) => {
-    if (e.keyCode === 13) {
-        handleSubmit(e)
+form.addEventListener('submit', async (e) => handleSubmit(e));
+form.addEventListener('keyup', async (e) => {
+    if (e.key === 'Enter') {
+        await handleSubmit(e);
     }
-})
+});
